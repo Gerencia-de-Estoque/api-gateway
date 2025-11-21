@@ -1,51 +1,39 @@
 package com.example.demo.config;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.reactive.CorsWebFilter;
-import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
-
-import java.util.Arrays;
-import java.util.List;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
+import reactor.core.publisher.Mono;
 
 @Configuration
 public class CorsConfig {
 
-    @Value("${CORS_ALLOWED_ORIGINS:*}")
-    private String corsAllowedOrigins;
-
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
-    public CorsWebFilter corsWebFilter() {
-        CorsConfiguration corsConfig = new CorsConfiguration();
+    public WebFilter corsFilter() {
+        return (ServerWebExchange exchange, WebFilterChain chain) -> {
+            var request = exchange.getRequest();
+            var response = exchange.getResponse();
+            var headers = response.getHeaders();
 
-        List<String> origins = Arrays.asList(corsAllowedOrigins.split(","));
-        boolean hasWildcard = origins.stream().anyMatch(o -> o.trim().equals("*"));
+            headers.add("Access-Control-Allow-Origin", "*");
+            headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+            headers.add("Access-Control-Allow-Headers", "*");
+            headers.add("Access-Control-Expose-Headers", "Authorization, Content-Type, Cache-Control");
+            headers.add("Access-Control-Max-Age", "3600");
 
-        if (hasWildcard) {
-            corsConfig.addAllowedOriginPattern("*");
-            corsConfig.setAllowCredentials(false);
-        } else {
-            for (String origin : origins) {
-                corsConfig.addAllowedOriginPattern(origin.trim());
+            if (request.getMethod() == HttpMethod.OPTIONS) {
+                response.setStatusCode(HttpStatus.OK);
+                return Mono.empty();
             }
-            corsConfig.setAllowCredentials(true);
-        }
 
-        corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        corsConfig.addAllowedHeader("*");
-        corsConfig.addExposedHeader("Authorization");
-        corsConfig.addExposedHeader("Content-Type");
-        corsConfig.addExposedHeader("Cache-Control");
-        corsConfig.setMaxAge(3600L);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", corsConfig);
-
-        return new CorsWebFilter(source);
+            return chain.filter(exchange);
+        };
     }
 }
