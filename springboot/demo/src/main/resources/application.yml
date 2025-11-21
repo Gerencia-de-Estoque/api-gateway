@@ -13,21 +13,6 @@ spring:
         response-timeout: ${GATEWAY_RESPONSE_TIMEOUT:20s}
       default-filters:
         - PreserveHostHeader
-      globalcors:
-        add-to-simple-url-handler-mapping: true
-        corsConfigurations:
-          '[/**]':
-            allowedOriginPatterns: ${CORS_ALLOWED_ORIGINS:*}
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - PATCH
-              - DELETE
-              - OPTIONS
-            allowedHeaders: "*"
-            exposedHeaders: "Authorization,Cache-Control,Content-Type"
-            allowCredentials: true
 
 management:
   endpoints:
