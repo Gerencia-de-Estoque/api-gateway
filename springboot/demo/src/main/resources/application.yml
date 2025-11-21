@@ -27,7 +27,7 @@ spring:
               - OPTIONS
             allowedHeaders: "*"
             exposedHeaders: "Authorization,Cache-Control,Content-Type"
-            allowCredentials: false
+            allowCredentials: true
 
 management:
   endpoints:
